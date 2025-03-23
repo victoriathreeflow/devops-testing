@@ -25,17 +25,52 @@ jobs:
     - name: Confirm identity
       run: aws sts get-caller-identity
 
-    - name: Deploy CloudFormation stack
+    - name: Validate CloudFormation templates
       run: |
         for template in cloudformation/*.yaml; do
-        stack_name=$(basename "$template" .yaml)-dev-stack
-
-        echo "Deploying $stack_name using $template..."
-
-        aws cloudformation deploy \
-            --template-file "$template" \
-            --stack-name "$stack_name" \
-            --capabilities CAPABILITY_NAMED_IAM \
-            --parameter-overrides Environment=dev
+          if [ ! -f "$template" ]; then
+            echo "No CloudFormation templates found in cloudformation directory"
+            exit 1
+          fi
+          echo "Validating template: $template"
+          aws cloudformation validate-template --template-body file://$template
         done
+
+    - name: Deploy CloudFormation stacks
+      id: deploy
+      run: |
+        failed_stacks=()
+        for template in cloudformation/*.yaml; do
+          if [ ! -f "$template" ]; then
+            echo "No CloudFormation templates found in cloudformation directory"
+            exit 1
+          fi
+          
+          stack_name=$(basename "$template" .yaml)-dev-stack
+          echo "Deploying $stack_name using $template..."
+
+          if ! aws cloudformation deploy \
+              --template-file "$template" \
+              --stack-name "$stack_name" \
+              --capabilities CAPABILITY_NAMED_IAM \
+              --parameter-overrides Environment=dev; then
+            failed_stacks+=("$stack_name")
+          fi
+        done
+
+        if [ ${#failed_stacks[@]} -ne 0 ]; then
+          echo "The following stacks failed to deploy:"
+          printf '%s\n' "${failed_stacks[@]}"
+          exit 1
+        fi
+
+    - name: Show CloudFormation stack events (on failure)
+      if: failure()
+      run: |
+        for template in cloudformation/*.yaml; do
+          stack_name=$(basename "$template" .yaml)-dev-stack
+          echo "Events for stack $stack_name:"
+          aws cloudformation describe-stack-events --stack-name "$stack_name" || true
+        done
+
         
