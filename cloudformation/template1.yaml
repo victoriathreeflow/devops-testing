@@ -1,0 +1,18 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Simple CloudFormation template for a dev environment with DynamoDB
+
+Resources:
+  DevDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: DevTable
+      AttributeDefinitions:
+        - AttributeName: Id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: Id
+          KeyType: HASH
+      BillingMode: PAYPERREQUEST
+      Tags:
+        - Key: Environment
+          Value: Dev
