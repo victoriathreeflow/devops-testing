@@ -1,0 +1,35 @@
+name: Deploy CloudFormation to Dev
+
+on:
+  push:
+    branches: [ '*' ]
+
+jobs:
+  deploy-cloudformation:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1  # Change to your region
+
+    - name: Deploy CloudFormation stack
+      run: |
+        for template in cloudformation/*.yaml; do
+        stack_name=$(basename "$template" .yaml)-dev-stack
+
+        echo "Deploying $stack_name using $template..."
+
+        aws cloudformation deploy \
+            --template-file "$template" \
+            --stack-name "$stack_name" \
+            --capabilities CAPABILITY_NAMED_IAM \
+            --parameter-overrides Environment=dev
+        done
+        
