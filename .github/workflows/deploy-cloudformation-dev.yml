@@ -4,10 +4,6 @@ on:
   push:
     branches: [ '*' ]
 
-permissions:
-  id-token: write     # 👈 REQUIRED for OIDC
-  contents: read 
-
 jobs:
   deploy-cloudformation:
     runs-on: ubuntu-latest
@@ -16,11 +12,12 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Configure AWS credentials from OIDC role
-      uses: aws-actions/configure-aws-credentials@v2
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v3
       with:
-        role-to-assume: arn:aws:iam::316119392696:role/GHA-dev-deployment-role
-        aws-region: us-west-2
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1  # Change to your region
 
     - name: Deploy CloudFormation stack
       run: |
