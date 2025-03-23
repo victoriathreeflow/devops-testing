@@ -1,18 +1,21 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Simple CloudFormation template for a dev environment with DynamoDB
+Description: Simple CloudFormation template to create an S3 bucket
+
+Parameters:
+  BucketName:
+    Description: A unique name for the S3 bucket
+    Type: String
+    Default: threeflow-test-devops-bucket
 
 Resources:
-  DevDynamoDBTable:
-    Type: AWS::DynamoDB::Table
+  DevS3Bucket:
+    Type: AWS::S3::Bucket
     Properties:
-      TableName: DevTable
-      AttributeDefinitions:
-        - AttributeName: Id
-          AttributeType: S
-      KeySchema:
-        - AttributeName: Id
-          KeyType: HASH
-      BillingMode: PAYPERREQUEST
+      BucketName: !Ref BucketName
+      VersioningConfiguration:
+        Status: Enabled
       Tags:
         - Key: Environment
           Value: Dev
+        - Key: Purpose
+          Value: Demo
