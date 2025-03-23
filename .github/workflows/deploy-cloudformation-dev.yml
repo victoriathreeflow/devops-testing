@@ -3,6 +3,11 @@ name: Deploy CloudFormation to Dev
 on:
   push:
     branches: [ '*' ]
+    paths:
+      - 'cloudformation/**'  # Trigger only if files in the cloudformation directory change
+permissions:
+  id-token: write     # 👈 REQUIRED for OIDC
+  contents: read 
 
 jobs:
   deploy-cloudformation:
